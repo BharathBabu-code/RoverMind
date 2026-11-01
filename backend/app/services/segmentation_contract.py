@@ -54,6 +54,6 @@ class SegmentationResult:
                     raise ValueError(
                         f"Invalid terrain label at ({r_idx}, {c_idx}): must be a non-empty string."
                     )
-                # Store a defensive copy so external changes to the input
+        # Store a defensive copy so external changes to the input
         # grid cannot invalidate this result after construction.
         self.terrain_grid = [row.copy() for row in self.terrain_grid]
