@@ -28,5 +28,13 @@ class Settings:
             return False
         return bool(self._meta_api_key.strip())
 
+    @property
+    def meta_api_key(self) -> str | None:
+        """
+        Read-only access to the Meta API key.
+        Prevents external modules from mutating the private attribute.
+        """
+        return self._meta_api_key
+
 # Expose a singleton instance for the application to import.
 settings = Settings()
