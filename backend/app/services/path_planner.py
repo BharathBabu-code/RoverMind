@@ -192,3 +192,7 @@ def find_path(
         geometric_length=total_geometric_len,
         expanded_nodes=expanded_nodes
     )
+
+
+# Compatibility alias
+plan_path = find_path

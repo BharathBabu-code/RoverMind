@@ -152,6 +152,7 @@ activemq-data/
 # Environments
 .env
 .envrc
+api_usage_ledger.json
 .venv
 env/
 venv/

@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@theme {
+  --color-mars-950: #06080d;
+  --color-mars-900: #0b0f17;
+  --color-mars-850: #101522;
+  --color-mars-800: #161d2d;
+  --color-mars-750: #1d263a;
+  --color-mars-700: #26324b;
+  --color-mars-600: #354566;
+  --color-mars-copper: #c8531f;
+  --color-mars-rust: #e25822;
+  --color-mars-glow: #ff733b;
+  --color-mars-amber: #f59e0b;
+  --color-mars-sand: #d97706;
+  --color-mars-sky: #38bdf8;
+  --color-mars-cyan: #06b6d4;
+  --color-mars-emerald: #10b981;
+  --color-mars-danger: #ef4444;
+
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  background-color: #06080d;
+  color: #f1f5f9;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(226, 88, 34, 0.12) 0%, transparent 60%),
+    linear-gradient(to bottom, transparent, rgba(6, 8, 13, 0.98)),
+    radial-gradient(rgba(38, 50, 75, 0.45) 1px, transparent 0);
+  background-size: 100% 100%, 100% 100%, 28px 28px;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Ambient Cursor-responsive Martian Lighting */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  background: radial-gradient(550px at var(--cursor-x, -500px) var(--cursor-y, -500px), rgba(226, 88, 34, 0.08), transparent 75%);
+  z-index: 1;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f17;
+}
+::-webkit-scrollbar-thumb {
+  background: #26324b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e25822;
+}
+
+/* Mission Control HUD container styling */
+.hud-panel {
+  background-color: rgba(11, 15, 23, 0.92);
+  border: 1px solid rgba(29, 38, 58, 0.85);
+  border-radius: 8px;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+  transition: all 0.2s ease;
+}
+
+.hud-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(29, 38, 58, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(16, 21, 34, 0.6);
+}
+
+/* Aerospace Technical corner brackets */
+.corner-bracket {
+  position: relative;
+}
+.corner-bracket::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #e25822;
+  border-left: 2px solid #e25822;
+  pointer-events: none;
+}
+.corner-bracket::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #e25822;
+  border-right: 2px solid #e25822;
+  pointer-events: none;
+}
+
+/* Spacecraft Cursor Layer */
+.spacecraft-follower {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+  filter: drop-shadow(0 0 10px rgba(226, 88, 34, 0.7));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spacecraft-follower {
+    display: none !important;
+  }
+  .animate-subtleFloat {
+    animation: none !important;
+  }
+}
+
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(0.3deg);
+  }
+}
+
+.animate-subtleFloat {
+  animation: subtleFloat 6s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
