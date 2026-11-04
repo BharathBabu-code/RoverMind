@@ -66,18 +66,24 @@ def extract_response_text(response: Any) -> str:
             pass
             
     if not isinstance(text, str) or not text.strip():
-        raise ValueError("Response text is empty or not a valid string.")
+        raise ValueError("Could not extract a valid, non-empty response string from the API payload.")
         
     return str(text)
 
 def count_foreground_pixels(raster: bytes, expected_length: int) -> int:
     """
     Counts foreground pixels based on the verified 1-byte-per-pixel flat array.
-    0 = background, non-zero = foreground.
+    Enforces strict binary values (0 or 1).
     """
     if len(raster) != expected_length:
-        raise ValueError(f"Raster length {len(raster)} does not match expected geometry ({expected_length}).")
-    return sum(1 for byte in raster if byte != 0)
+        raise ValueError(
+            f"Raster length {len(raster)} does not match expected geometry ({expected_length})."
+        )
+        
+    if any(value not in (0, 1) for value in raster):
+        raise ValueError("Decoded raster contains non-binary values.")
+        
+    return sum(raster)
 
 def run_experiment(image_path: str, prompt: str) -> None:
     try:
@@ -143,7 +149,17 @@ def run_experiment(image_path: str, prompt: str) -> None:
 
     print("\n--- Parsing Diagnostics ---")
     diagnostics = getattr(result, "diagnostics", [])
-    print(f"Diagnostics  : {diagnostics if diagnostics else 'None'}")
+    if diagnostics:
+        print(f"Diagnostics  : {diagnostics}")
+        # Check string representations for fatal/error severity without assuming object schema
+        fatal_errors = [d for d in diagnostics if "error" in str(d).lower() or "fatal" in str(d).lower()]
+        if fatal_errors:
+            print("Error        : Halting due to fatal parser diagnostics.")
+            sys.exit(1)
+        else:
+            print("Warning      : Non-fatal diagnostics present. Proceeding.")
+    else:
+        print("Diagnostics  : None")
 
     outcome = getattr(result, "outcome", None)
     outcome_status = getattr(outcome, "status", "unknown")
@@ -165,6 +181,7 @@ def run_experiment(image_path: str, prompt: str) -> None:
 
     decoded_success = 0
     decoded_failed = 0
+    total_foreground_pixels = 0
 
     for idx, record in enumerate(mask_records):
         print(f"\n--- Mask {idx + 1} ---")
@@ -203,6 +220,8 @@ def run_experiment(image_path: str, prompt: str) -> None:
             fg_pixels = count_foreground_pixels(raster_bytes, expected_len)
             print(f"Foreground   : {fg_pixels} pixels")
             
+            total_foreground_pixels += fg_pixels
+            
             confidence = getattr(record, "confidence", None)
             if confidence is not None:
                 print(f"Confidence   : {confidence}")
@@ -215,6 +234,7 @@ def run_experiment(image_path: str, prompt: str) -> None:
     print(f"\n--- Final Summary ---")
     print(f"Successfully decoded masks: {decoded_success}")
     print(f"Failed decodings          : {decoded_failed}")
+    print(f"Total foreground pixels   : {total_foreground_pixels} (sum across masks, may include overlap)")
 
 if __name__ == "__main__":
     import argparse
