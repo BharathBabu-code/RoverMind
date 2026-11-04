@@ -1,126 +1,267 @@
-# RoverMind — AI-Assisted Planetary Exploration Platform
+# RoverMind: AI-Assisted Planetary Surface Perception & Autonomous Path Planning
 
-RoverMind is an AI-assisted planetary exploration decision-support and visualization system. It ingests monocular Mars rover camera imagery (Navcam/Hazcam), performs visual concept segmentation via Meta SAM 3.1, decodes and projects spatial masks onto a discrete coordinate grid, compiles terrain-risk costmaps, and computes deterministic lower-cost routes using a custom A* path-planning algorithm.
+RoverMind is an AI-assisted planetary exploration decision-support and tactical navigation platform. It ingests monocular Mars rover camera imagery (Navcam/Hazcam), performs zero-shot promptable visual concept segmentation via **Meta SAM 3.1**, projects spatial raster masks onto a discrete coordinate grid, compiles multi-hazard traversability costmaps, computes deterministic optimal trajectories using a custom **8-way Octile A\*** algorithm, and synthesizes structured operational telemetry briefings through **Meta LLaMA 3.3 / Muse Spark**.
 
----
-
-## Key Features
-
-- **Monocular Image Ingestion & Validation**: Safe two-pass Pillow validation (PNG and JPEG) with dimension and payload integrity enforcement.
-- **Meta SAM 3.1 Integration**: Uses the official `meta-sam-parser` to parse streaming token grammar and decode binary raster masks.
-- **Spatial Alignment & Conflict Arbitration**: Projects box-local masks onto source-media coordinates, resolving overlapping concepts with safety priority hierarchies.
-- **Normalized Terrain Contract**: Converts semantic visual concepts to canonical terrain classes (`clear`, `rocky`, `loose`, `obstacle`, `unknown`).
-- **Configurable Traversal Costmaps**: Translates terrain classes into numeric impedance grids with impassable obstacles.
-- **Authoritative Custom A* Pathfinding**: Supports 4-way cardinal and 8-way diagonal movement, Octile/Manhattan heuristics, and corner-cutting prevention.
-- **Meta Reasoning Model & Structured Mission Intelligence**: Multi-model reasoning pipeline featuring primary `meta/muse-spark` with automatic graceful fallback to `meta/llama-3.3-70b-instruct`, and deterministic offline rule engine to synthesize 4-part operational briefings (Observation, Navigation Assessment, Risk & Uncertainty, Actionable Takeaways) with zero hallucinated geometry.
-- **Contextual Mission Chatbot & Controlled Tool Interface**: Conversational assistant with access to 6 sandboxed simulation tools (`get_mission_summary`, `get_terrain_distribution`, `get_region_details`, `get_route_metrics`, `compare_routes`, `get_analysis_diagnostics`) bounded to 4 tool-calling iterations and 25-message session memory.
-- **Mission-Control React Frontend**: Dark Mars-themed UI with layer toggling, opacity slider, cell inspection, interactive Start/Goal placement, live Mission Briefing HUD, and interactive Mission Chatbot drawer.
-- **Graceful Offline Mode**: Automatically operates with labelled synthetic fixtures and deterministic rule engines when API keys are not configured or external access is disabled.
-- **Comprehensive Test Suite**: 203 backend automated tests passing with 100% success rate under a hermetic test firewall, alongside strict frontend TypeScript compilation (`tsc`) and Vite production build.
-- **Hardened Security & API Cost Governance**: Global API kill switch (`EXTERNAL_API_ENABLED=false`), dry-run validation mode, atomic operation budget limits (`RequestBudget`), concurrency semaphores, 25MP decompression bomb ceiling, dual-bounded in-memory session cache (25 frames and 100MB aggregate RAM ceiling), configurable production CORS origins, defensive HTTP security headers, and comprehensive regex error sanitization for credentials and tokens.
+- **Repository**: [https://github.com/BharathBabu-code/RoverMind.git](https://github.com/BharathBabu-code/RoverMind.git)
+- **Evaluation Status**: Live Meta Model API Ready & Deterministic Fallback Verified
 
 ---
 
-## Architecture at a Glance
+## Evaluation Notice for Hackathon Judges
+
+> **Meta API Key Configuration for Evaluation**:  
+> In compliance with competition guidelines, RoverMind evaluates live planetary imagery using your Meta Model API keys. Follow the sequential setup instructions below to configure your credentials:
+> 1. Copy `.env.example` to create your local `.env` configuration.
+> 2. Insert your Meta Model API keys (`META_API_KEY` for Meta SAM 3.1 and `META_REASONING_API_KEY` for Meta LLaMA 3.3 / Muse Spark).
+> 3. Activate live inference by toggling `EXTERNAL_API_ENABLED=false` to `true` and `EXTERNAL_API_DRY_RUN=true` to `false`.
+> 
+> *(Note: The non-API offline mode is optionally supported as a fallback for local testing without network connectivity, automatically utilizing built-in deterministic adapters and our pre-downloaded Jezero/Gale gallery).*
+
+---
+
+## Pre-Existing Work vs. Original Work (Hackathon Disclosure)
+
+### Required Opening Line for Submission Video
+> *"In this video, we present RoverMind, an original planetary hazard perception and A\* path planning platform built on top of Meta's SAM 3.1 and LLaMA 3.3 models..."*
+
+### Architectural Attribution Matrix
+
+| Component | Status | Source / Attribution | Description & Role |
+| :--- | :--- | :--- | :--- |
+| **Meta SAM 3.1** | Pre-Existing Model | Meta AI | Foundation vision model for zero-shot promptable visual segmentation (`rock`, `sand`, `obstacle`, `bedrock`). |
+| **Meta LLaMA 3.3 (70B Instruct)** | Pre-Existing Model | Meta AI | Foundation large language model used for operational briefing generation and operator dialogue. |
+| **Meta Muse Spark (1.3)** | Pre-Existing Model | Meta AI | Specialized reasoning model evaluated for multi-step mission assessment. |
+| **`meta-sam-parser`** | Pre-Existing Library | Meta AI (v0.1.0) | Open-source parser for decoding streaming token grammar from SAM 3.1. |
+| **Mars Optical Imagery** | Pre-Existing Data | NASA / JPL-Caltech / MSSS | Public-domain Navcam/Hazcam frames from Mars 2020 (Perseverance) and MSL (Curiosity). |
+| **Spatial Downsampling & Grid Mapping** | **Original Work** | RoverMind Authors | Custom algorithm converting high-resolution continuous monocular rasters into discrete 2D spatial coordinate grids. |
+| **Hazard Conflict Arbitration Engine** | **Original Work** | RoverMind Authors | Multi-class priority hierarchy resolving overlapping segmentation boundaries into canonical terrain classes. |
+| **Traversability Risk Costmap Compiler** | **Original Work** | RoverMind Authors | Physical terrain impedance modeling translating surface classifications into weighted movement penalties. |
+| **8-Way Octile A\* Path Planning Engine** | **Original Work** | RoverMind Authors | Custom pathfinder with diagonal corner-cutting prevention, Octile distance heuristic, and mathematical step-cost explainability. |
+| **Deterministic Rule & Fallback Engine** | **Original Work** | RoverMind Authors | Hermetic, zero-external-dependency reasoning pipeline ensuring 100% offline uptime and automated test repeatability. |
+| **Mission Telemetry Chatbot & Tool Sandbox** | **Original Work** | RoverMind Authors | Sandboxed operator assistant exposing 6 simulation tools with hard iteration ceilings and strict security guardrails. |
+| **Interactive Mission Cockpit UI** | **Original Work** | RoverMind Authors | React/TypeScript tactical interface with pan/zoom canvas, interactive waypoint dragging, live layer toggling, and Mars science facts HUD. |
+
+---
+
+## Meta Models Used & System Capabilities
+
+### 1. Meta SAM 3.1 (Segment Anything Model 3.1)
+- **Deployment Location**: Hosted Meta AI Inference Server (`https://api.meta.ai/v1`) or Local Deterministic Segmentation Adapter (Offline Fallback).
+- **Function**: Receives downsampled optical frames and evaluates text prompts: `rock`, `loose sand drift`, `hazard obstacle`, and `firm bedrock`.
+- **RoverMind Layer Built On Top**:
+  - Streams and unpacks raw token grammar using `meta-sam-parser`.
+  - Translates local bounding rasters into global media coordinate space.
+  - Arbitrates overlapping masks using a safety-first priority ladder: `Obstacle (Impassable) > Sand Drift (High Slip) > Rocky Field (High Center) > Bedrock (Nominal) > Unclassified (Precautionary)`.
+
+### 2. Meta LLaMA 3.3 (70B Instruct) & Muse Spark (1.3)
+- **Deployment Location**: Hosted Meta AI OpenAI-Compatible API Endpoint or Local Deterministic Aerospace Reasoning Engine (Offline Fallback).
+- **Function**: Ingests structured terrain distributions, obstacle density matrices, and computed A* traversal metrics to generate human-readable operational intelligence.
+- **RoverMind Layer Built On Top**:
+  - **4-Part Structured Telemetry Briefing**: Synthesizes structured mission assessments across *Visual Terrain Observation*, *Tactical Traversal Assessment*, *Sensor Uncertainty & Hazard Analysis*, and *Actionable Waypoint Recommendations*.
+  - **Operator Chatbot with 6 Sandboxed Simulation Tools**:
+    1. `get_mission_summary`: Aggregated terrain and traversal health metrics.
+    2. `get_terrain_distribution`: Exact cell-level surface classification counts.
+    3. `get_region_details`: Focused bounding-box hazard inspection.
+    4. `get_route_metrics`: Turn-by-turn geometry, impedance sums, and step deviations.
+    5. `compare_routes`: Non-mutating counterfactual trajectory evaluations.
+    6. `get_analysis_diagnostics`: Compute budgets, latency logs, and model providences.
+  - **Mission Security Guardrails**: Strict policy enforcement preventing prompt-injection attacks, refusing internal configuration or credential disclosure, and deflecting non-space/off-topic inquiries.
+
+---
+
+## Open-Source Assets & Data Rights
+
+All assets and dependencies utilized in RoverMind comply with open-source and public-domain licensing:
+
+1. **Planetary Imagery**: Public-domain imagery provided by NASA / JPL-Caltech / Malin Space Science Systems (MSSS) via the Mars 2020 and MSL mission archives. Under NASA's standard media guidelines, these images are in the public domain and authorized for educational, scientific, and software evaluation purposes.
+2. **Backend Framework & Algorithms**:
+   - `FastAPI` & `Uvicorn`
+   - `Pydantic` — Data validation and schema enforcement
+   - `Pillow` — Secure image decoding and dimensional bounds checking
+   - `HTTPX` — Resilient asynchronous HTTP transport
+   - `Pytest` — Hermetic automated test suite
+3. **Frontend Application**:
+   - `React 18` & `TypeScript`
+   - `Vite` — Frontend tooling and asset compilation
+   - `Tailwind CSS` — Mission control design system
+   - `Lucide React` — Aerospace telemetry iconography
+
+---
+
+## System Architecture Pipeline
 
 ```
-Mars Rover Image (1648×1200 PNG)
-           ↓
-Image Validation (Pillow 25MP Ceiling)
-           ↓
-Visual Segmentation (Meta SAM 3.1 / Offline Fixture)
-           ↓
-Mask Parsing & Decoding (meta-sam-parser)
-           ↓
-Spatial Grid Reconstruction & Alignment
-           ↓
-Terrain Interpretation (Concept -> Class Mapping)
-           ↓
-Normalized Segmentation Contract (SegmentationResult)
-           ↓
-Terrain Traversal Costmap (build_cost_map)
-           ↓
-Custom A* Path Planning (find_path)
-           ↓
-Structured Mission Context (MissionContextDto, LRU Store)
-           ↓
-Meta Reasoning Model (Primary: muse-spark / Fallback: llama-3.3 / Deterministic Rule Engine)
-   ├── Observation Summarization (4-part structured briefing)
-   ├── Terrain & Route Analysis Justification
-   ├── Physical Risk & Sensor Uncertainty Interpretation
-   └── Contextual Mission Chatbot (6 Sandboxed Tools)
-           ↓
-Interactive Mission Control UI (React + TypeScript HUD)
+              NASA Rover Optical Frame (Navcam / Hazcam)
+                                  │
+                                  ▼
+             Two-Pass Pillow Validation (25MP Decomp Ceiling)
+                                  │
+                                  ▼
+       ┌──────────────────────────────────────────────────────┐
+       │             Visual Concept Segmentation              │
+       │    Meta SAM 3.1 API (Live) OR Deterministic Adapter   │
+       └──────────────────────────┬───────────────────────────┘
+                                  │ Token Grammar & Binary Masks
+                                  ▼
+       ┌──────────────────────────────────────────────────────┐
+       │       Spatial Alignment & Conflict Arbitration       │
+       │     (Obstacle > Loose Sand > Rocky > Bedrock)        │
+       └──────────────────────────┬───────────────────────────┘
+                                  │ Canonical Segmentation Grid
+                                  ▼
+       ┌──────────────────────────────────────────────────────┐
+       │         Traversability Risk Costmap Compiler         │
+       │   Bedrock: 1.0x | Rocky: 3.0x | Sand: 5.0x | Obstacle │
+       └──────────────────────────┬───────────────────────────┘
+                                  │ Weighted Impedance Matrix
+                                  ▼
+       ┌──────────────────────────────────────────────────────┐
+       │          Custom 8-Way Octile A* Path Planner         │
+       │    Diagonal Corner-Cutting Prevention & Octile h(n)  │
+       └──────────────────────────┬───────────────────────────┘
+                                  │ Waypoints, Cost Sum, Diagnostics
+                                  ▼
+       ┌──────────────────────────────────────────────────────┐
+       │            Structured Mission Intelligence           │
+       │ Meta LLaMA 3.3 / Muse Spark OR Deterministic Engine  │
+       │  • 4-Part Telemetry Briefing (Zero-Hallucination)    │
+       │  • Contextual Mission Chatbot (6 Sandboxed Tools)    │
+       │  • Strict Security Guardrails (No Secret Leakage)    │
+       └──────────────────────────┬───────────────────────────┘
+                                  │
+                                  ▼
+       ┌──────────────────────────────────────────────────────┐
+       │         Interactive Mission Cockpit Frontend         │
+       │  • 2D Pan/Zoom Canvas with Dynamic Waypoint Dragging │
+       │  • Real-Time Impedance & Step-Cost Explainability    │
+       │  • Built-in Mars Rover Gallery (4 Jezero/Gale Frames)│
+       │  • 10s Non-Blocking Mars Science Facts HUD Ticker    │
+       └──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Detailed Documentation Directory (`docs/`)
+## Sequential Setup & Execution Guide
 
-Comprehensive technical documentation is provided in the [`docs/`](./docs) directory:
+Follow this sequence to clone, configure API keys, install dependencies, and run the platform on your system.
 
-1. [**Project Overview** (`docs/PROJECT_OVERVIEW.md`)](./docs/PROJECT_OVERVIEW.md) — Motivation, executive summary, objectives, and technology stack.
-2. [**Architecture** (`docs/ARCHITECTURE.md`)](./docs/ARCHITECTURE.md) — Complete system architecture with detailed Mermaid diagrams across all stages.
-3. [**File-by-File Guide** (`docs/FILE_BY_FILE_GUIDE.md`)](./docs/FILE_BY_FILE_GUIDE.md) — **Highest priority technical reference** detailing every source module, its functions, classes, data contracts, and edge cases.
-4. [**Data Flow Trace** (`docs/DATA_FLOW.md`)](./docs/DATA_FLOW.md) — Step-by-step trace of a single image analysis with concrete request/response payloads through reasoning and chatbot stages.
-5. [**Algorithmic Foundations** (`docs/ALGORITHMS.md`)](./docs/ALGORITHMS.md) — Detailed formulation of the custom A* engine, heuristic admissibility, corner-cutting prevention, and worked examples.
-6. [**API Reference** (`docs/API_REFERENCE.md`)](./docs/API_REFERENCE.md) — Complete REST endpoint documentation with request/response schemas including mission and chatbot routes.
-7. [**Reasoning Model Integration** (`docs/REASONING_MODEL_INTEGRATION.md`)](./docs/REASONING_MODEL_INTEGRATION.md) — Architecture, prompt engineering, structured briefing schemas, and offline fallback mechanics for Meta's reasoning layer.
-8. [**Mission Chatbot & Tool Interface** (`docs/MISSION_CHATBOT.md`)](./docs/MISSION_CHATBOT.md) — Tool specifications, execution loops, conversational session bounds, and non-mutating route simulations.
-9. [**Quality Assurance & Test Report** (`docs/TEST_REPORT.md`)](./docs/TEST_REPORT.md) — Execution report covering all 128 automated backend and frontend tests.
-10. [**Security Audit Report** (`docs/SECURITY_AUDIT.md`)](./docs/SECURITY_AUDIT.md) — In-depth vulnerability audit covering CORS, memory DoS, decompression bombs, timeouts, and sanitized errors.
-11. [**Complete Technical Guide & Engineering Blueprint** (`docs/ROVERMIND_COMPLETE_TECHNICAL_GUIDE.md`)](./docs/ROVERMIND_COMPLETE_TECHNICAL_GUIDE.md) — Exhaustive guide detailing what every visual element represents, offline vs live execution traces, and PowerShell instructions.
-12. [**Live API Workflow & Verification Guide** (`docs/LIVE_API_WORKFLOW.md`)](./docs/LIVE_API_WORKFLOW.md) — End-to-end trace when `META_API_KEY` is configured, token grammar decoding, and PowerShell activation instructions.
-13. [**Requirements Traceability Matrix** (`docs/REQUIREMENTS_TRACEABILITY.md`)](./docs/REQUIREMENTS_TRACEABILITY.md) — Verification status across all 16 platform capabilities.
-14. [**Known Limitations** (`docs/KNOWN_LIMITATIONS.md`)](./docs/KNOWN_LIMITATIONS.md) — Scientific boundaries, physical sensor limits, and operational assumptions.
-
----
-
-## Getting Started
-
-### Prerequisites
-- **Python**: 3.12+
-- **Node.js**: 20+ (with npm)
+### System Prerequisites
+- **Python**: Version `3.10`, `3.11`, or `3.12`
+- **Node.js**: Version `18.x`, `20.x`, or higher (includes `npm`)
 - **Git**
 
 ---
 
-### Installation
-
-#### 1. Clone the Repository
+### Step 1: Clone the Repository
+Open your terminal and clone the repository:
 ```bash
 git clone https://github.com/BharathBabu-code/RoverMind.git
 cd RoverMind
 ```
 
-#### 2. Backend Environment Setup (Windows PowerShell)
+---
+
+### Step 2: Configure Environment & Meta Model API Keys
+
+RoverMind includes a template file `.env.example`. Create your active `.env` file from this template:
+
+**On Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
+
+**On macOS / Linux:**
+```bash
+cp .env.example .env
+```
+
+Open `.env` in any text editor and complete the two required configuration steps:
+
+#### 1. Enable Live External API Calls (Change False to True)
+Locate the safety kill switches at the top of `.env` and change them as follows:
+```env
+# Switch from 'false' to 'true' to enable live network inference
+EXTERNAL_API_ENABLED=true
+
+# Switch from 'true' to 'false' to disable dry-run mock mode
+EXTERNAL_API_DRY_RUN=false
+```
+
+#### 2. Insert Your Meta Model Credentials
+Enter your Meta API keys and desired model identifiers:
+```env
+# Meta SAM 3.1 visual segmentation API key
+META_API_KEY=your_actual_meta_sam_api_key_here
+
+# Meta Reasoning API key (defaults to META_API_KEY if using unified key)
+META_REASONING_API_KEY=your_actual_meta_reasoning_api_key_here
+
+# Reasoning Model Routing
+REASONING_PROVIDER=llama-3.3
+LLAMA_MODEL=llama-3.3-70b-instruct
+META_REASONING_BASE_URL=https://api.meta.ai/v1
+```
+
+> **Optional Non-API Offline Fallback**: If you ever need to test locally without internet access or without consuming API quota, you can optionally set `EXTERNAL_API_ENABLED=false`. In this mode, RoverMind runs its built-in deterministic segmentation adapter and aerospace rule engine with zero external network calls.
+
+---
+
+### Step 3: Configure Backend Virtual Environment
+
+#### On Windows (PowerShell / Command Prompt):
 ```powershell
 # Create virtual environment
 python -m venv .venv
 
-# Activate virtual environment
+# Activate virtual environment in PowerShell:
 .\.venv\Scripts\Activate.ps1
+# (Or in Command Prompt: .\.venv\Scripts\activate.bat)
 
-# Install backend dependencies
+# Upgrade pip and install backend dependencies
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-*(Linux/macOS equivalent)*:
+#### On macOS (Terminal / zsh):
 ```bash
+# Create and activate virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+
+# Upgrade pip and install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-#### 3. Frontend Environment Setup
-```powershell
-Set-Location frontend
-npm install
-npm run build
-Set-Location ..
+#### On Linux (Ubuntu / Debian / bash):
+```bash
+# Install system packages if needed
+sudo apt update && sudo apt install -y python3-venv python3-pip
+
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Upgrade pip and install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-*(Linux/macOS equivalent)*:
+---
+
+### Step 4: Install Frontend Dependencies & Build
+
+In the same repository, compile the React mission control interface:
+
+**On Windows (PowerShell / Command Prompt):**
+```powershell
+cd frontend
+npm install
+npm run build
+cd ..
+```
+
+**On macOS / Linux:**
 ```bash
 cd frontend
 npm install
@@ -130,107 +271,73 @@ cd ..
 
 ---
 
-## Environment & API Key Safety
+### Step 5: Launch the Application
 
-The project ships with `.env.example` defining safe pre-live defaults:
+With the backend virtual environment active (`.venv`), start the unified FastAPI server:
 
-```env
-# Global Kill Switch & Pre-Live Safety Mode
-EXTERNAL_API_ENABLED=false
-EXTERNAL_API_DRY_RUN=true
-
-# Meta SAM 3.1 Visual Segmentation
-META_API_KEY=your_meta_sam_api_key_here
-
-# Meta Reasoning Model (Primary: muse-spark, Fallback: llama-3.3)
-META_REASONING_API_KEY=your_meta_reasoning_api_key_here
-REASONING_PROVIDER=muse-spark
-MUSE_SPARK_MODEL=muse-spark-1.3
-LLAMA_MODEL=llama-3.3-70b-instruct
-META_REASONING_BASE_URL=https://api.meta.ai/v1
-
-# Security & Governance Limits
-MAX_CONCURRENT_SAM_REQUESTS=2
-MAX_CONCURRENT_REASONING_REQUESTS=2
-MAX_REASONING_REQUESTS_PER_BRIEFING=2
-MAX_REASONING_REQUESTS_PER_CHAT=5
-MAX_TOOL_ITERATIONS_PER_CHAT=4
-```
-
-### Running Offline (Default — No Keys Required)
-If you **do not create a `.env` file**, RoverMind runs in **100% deterministic offline mode**:
-- Segmentation generates synthetic labelled terrain fixtures.
-- Mission briefings and chatbot replies use the local deterministic rule engine.
-- No billable external requests or network connections are ever made.
-
-### Running Live (When Ready for Real API Inference)
-When you are ready to make real external API calls:
-1. Copy `.env.example` to create a `.env` file in the project root:
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-2. Open `.env` and fill in your actual API keys:
-   ```env
-   META_API_KEY=your_actual_sam_api_key
-   META_REASONING_API_KEY=your_actual_reasoning_api_key
-   ```
-3. Enable external API calls and disable dry-run mode:
-   ```env
-   EXTERNAL_API_ENABLED=true
-   EXTERNAL_API_DRY_RUN=false
-   ```
-
-> **Security Note**: Never commit your `.env` file to Git. The `.gitignore` file is pre-configured to ignore `.env` so your secrets remain protected on your machine.
-
----
-
-## Running the Application
-
-### Option A: Unified Full-Stack Server (Recommended)
-FastAPI automatically serves the compiled React mission-control frontend directly on port 8000:
-
-```powershell
-# From project root with virtual environment activated:
-.\.venv\Scripts\uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-Open your browser to:
-- **Mission Control UI**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
-- **Interactive Swagger Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- **ReDoc API Reference**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
-
-### Option B: Independent Frontend Development Server
-For active frontend development with hot-module replacement (Vite proxying to FastAPI):
-
-```powershell
-# Terminal 1 (Backend):
-.\.venv\Scripts\uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
-
-# Terminal 2 (Frontend):
-Set-Location frontend
-npm run dev
-```
-
-Open your browser to: [http://localhost:5173](http://localhost:5173)
-
----
-
-## Running Tests
-
-### Run All Backend Automated Tests
-```powershell
-.\.venv\Scripts\python.exe -m pytest backend/tests -v
-```
-
-### Run Frontend Static Type Checking & Build
-```powershell
-Set-Location frontend
-npm test        # executes tsc --noEmit
-npm run build   # executes tsc && vite build
+```bash
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 ---
 
-## Scientific Honesty & Decision Support Notice
+### Step 6: Access the Mission Cockpit
 
-A single 2D RGB or grayscale camera frame cannot establish physical terrain depth, slope stability, mechanical soil shear strength, or certified rover traversability. RoverMind is a **computational decision-support and visualization system**, not an autonomous flight navigation system. All outputs represent image-derived visual estimations and mathematical lowest-cost paths under configured parameters.
+Open your web browser and navigate to:
+
+- **Mission Cockpit UI**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- **Interactive OpenAPI Documentation**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **ReDoc Technical Specification**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+When connected with live API keys, the top status bar in the Mission Cockpit displays:
+- `SERVER: LOCAL OK`
+- `SAM: LIVE`
+- `AI: LLAMA 3.3` (or `AI: MUSE SPARK`)
+
+---
+
+### Dual Development Server Mode (Optional for Active Frontend Editing)
+If you wish to make live modifications to frontend components with hot-module replacement (Vite proxying to FastAPI):
+- **Terminal 1 (Backend)**: `uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload`
+- **Terminal 2 (Frontend)**: `cd frontend && npm run dev`
+- **Development UI**: [http://localhost:5173](http://localhost:5173)
+
+---
+
+## Automated Test Suite & Verification
+
+RoverMind includes 207 automated tests covering image ingestion, coordinate downsampling, SAM token parsing, 8-way octile A* pathfinding, budget enforcement, and chatbot guardrails.
+
+### Run Backend Test Suite
+```bash
+# Ensure virtual environment is activated
+pytest backend/tests -v
+```
+
+### Run Frontend Static Verification & Build
+```bash
+cd frontend
+npm run build
+cd ..
+```
+
+---
+
+## Key Mission Capabilities & UI Controls
+
+- **Curated Mars Rover Gallery**: Click **Sample Frame** to instantly select between 4 authentic Mars rover exploration terrains:
+  1. *Jezero Crater Vista* (Perseverance Sol 180) — Broad bedrock corridor with scattered gravel.
+  2. *Boulder Field Hazard* (Perseverance Western Scarp) — High-density obstacle field testing obstruction clearance.
+  3. *Loose Sand Drift* (Curiosity Gale Dunes) — High-impedance ripple field testing wheel-slip avoidance.
+  4. *Bedrock Corridor* (Kodiak Mesa Approach) — Favorable low-impedance traversal pathway.
+- **Local Device Ingestion**: Click **Upload Image** to process any external monocular JPEG or PNG rover image (validated with two-pass Pillow safety checks).
+- **Interactive Waypoint Manipulation**: Click and drag the cyan **Start (Alpha)** and orange **Goal (Bravo)** flags across the grid canvas. The A* algorithm recalculates the optimal path in real time (< 15 ms).
+- **Explainability Dashboard**: Switch tabs in the intelligence panel to inspect exact step-cost reconciliation, cardinal vs. diagonal step distribution, and mathematical Octile heuristic proofs.
+- **Mars Science Facts HUD**: A 10-second non-blocking informational ticker displays verified planetary science facts during analysis operations, equipped with user dismissal controls.
+- **Mission Operator Chatbot**: Open the right drawer to query mission telemetry, ask space exploration science questions, or request hypothetical counterfactual route simulations with built-in aerospace security guardrails.
+
+---
+
+## Scientific Honesty & Operational Boundaries
+
+A single 2D RGB monocular camera frame cannot determine physical 3D elevation profiles, soil shear mechanics, sub-surface voids, or certified rover steering dynamics. RoverMind is designed as an **operator decision-support and tactical planning visualization platform**, not an autonomous spacecraft flight controller. All generated costmaps, impedance values, and trajectories represent mathematical optimizations over image-derived visual hazard classifications.
