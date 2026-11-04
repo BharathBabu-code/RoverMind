@@ -35,7 +35,7 @@ const VERIFIED_MARS_FACTS: MarsFact[] = [
     id: 4,
     category: 'ATMOSPHERIC DYNAMICS',
     topic: 'Surface Atmospheric Pressure',
-    fact: 'Mars has an atmospheric surface pressure averaging 610 Pascals (6.1 millibars)—less than 1% of Earth’s sea-level pressure. It consists of 95.3% Carbon Dioxide ($CO_2$), 2.6% Nitrogen ($N_2$), and 1.9% Argon ($Ar$).',
+    fact: 'Mars has an atmospheric surface pressure averaging 610 Pascals (6.1 millibars)—less than 1% of Earth’s sea-level pressure. It consists of 95.3% Carbon Dioxide (CO₂), 2.6% Nitrogen (N₂), and 1.9% Argon (Ar).',
     source: 'Viking Lander & Mars Science Laboratory Barometric Telemetry',
   },
   {
@@ -56,7 +56,7 @@ const VERIFIED_MARS_FACTS: MarsFact[] = [
     id: 7,
     category: 'IN-SITU RESOURCE UTILIZATION',
     topic: 'MOXIE Oxygen Production',
-    fact: 'Perseverance’s MOXIE experiment proved that humans can generate breathable oxygen on Mars by using solid oxide electrolysis to split atmospheric $CO_2$ into pure $O_2$ and carbon monoxide.',
+    fact: 'Perseverance’s MOXIE experiment proved that humans can generate breathable oxygen on Mars by using solid oxide electrolysis to split atmospheric CO₂ into pure O₂ and carbon monoxide.',
     source: 'MIT & NASA Space Technology Mission Directorate (STMD)',
   },
   {
@@ -119,7 +119,7 @@ const VERIFIED_MARS_FACTS: MarsFact[] = [
     id: 16,
     category: 'SURFACE ENVIRONMENT',
     topic: 'Extreme Thermal Swings',
-    fact: 'Surface temperatures at the Martian equator swing from a daytime high of +20°C (68°F) to an overnight plunge of -73°C (-100°F). At the winter poles, temperatures drop below -125°C, freezing $CO_2$ into dry ice.',
+    fact: 'Surface temperatures at the Martian equator swing from a daytime high of +20°C (68°F) to an overnight plunge of -73°C (-100°F). At the winter poles, temperatures drop below -125°C, freezing CO₂ into dry ice.',
     source: 'Mars Environmental Dynamics Analyzer (MEDA) Instrument Data',
   },
 ];

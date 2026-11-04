@@ -781,15 +781,15 @@ def _deterministic_chat_response(image_id: str, query: str) -> Tuple[str, List[T
     if any(k in q for k in ["atmosphere", "pressure", "air", "breathe", "moxie"]):
         return (
             "### Martian Atmospheric Dynamics\n\n"
-            "- **Composition**: 95.3% Carbon Dioxide ($CO_2$), 2.6% Nitrogen ($N_2$), 1.9% Argon ($Ar$), with trace water vapor and oxygen.\n"
+            "- **Composition**: 95.3% Carbon Dioxide (CO₂), 2.6% Nitrogen (N₂), 1.9% Argon (Ar), with trace water vapor and oxygen.\n"
             "- **Surface Pressure**: Averages ~610 Pascals (about 6.1 millibars)—less than 1% of Earth's mean sea-level pressure (1013.25 mb).\n"
-            "- **In-Situ Resource Utilization (ISRU)**: NASA's Perseverance demonstrated the **MOXIE** instrument, which successfully extracted breathable oxygen ($O_2$) by solid oxide electrolysis of atmospheric $CO_2$."
+            "- **In-Situ Resource Utilization (ISRU)**: NASA's Perseverance demonstrated the **MOXIE** instrument, which successfully extracted breathable oxygen (O₂) by solid oxide electrolysis of atmospheric CO₂."
         ), tool_logs
 
     if any(k in q for k in ["perseverance", "curiosity", "opportunity", "spirit", "rover"]):
         return (
             "### Mars Rover Fleet Overview\n\n"
-            "- **Perseverance (Mars 2020)**: 1,025 kg nuclear-powered (MMRTG) rover exploring Jezero Crater. Equipped with Mastcam-Z, SuperCam, RIMFAX ground-penetrating radar, PIXL, SHERLOC, and the MOXIE $O_2$ generator.\n"
+            "- **Perseverance (Mars 2020)**: 1,025 kg nuclear-powered (MMRTG) rover exploring Jezero Crater. Equipped with Mastcam-Z, SuperCam, RIMFAX ground-penetrating radar, PIXL, SHERLOC, and the MOXIE O₂ generator.\n"
             "- **Curiosity (MSL)**: Landed in Gale Crater in August 2012, traversing over 32 km while analyzing ancient habitable lacustrine environments.\n"
             "- **Spirit & Opportunity (MER)**: Twin solar-powered rovers landed in 2004. Opportunity survived an astonishing 14+ years (45 km traversed) until the 2018 global dust storm."
         ), tool_logs
