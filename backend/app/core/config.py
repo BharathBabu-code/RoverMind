@@ -130,7 +130,7 @@ class Settings:
         self._meta_reasoning_base_url: str = _validate_url(os.environ.get("META_REASONING_BASE_URL"), "https://api.meta.ai/v1", "META_REASONING_BASE_URL")
 
         # Hard Request & Cost Budgets
-        self._max_sam_requests_per_analysis: int = _parse_int(os.environ.get("MAX_SAM_REQUESTS_PER_ANALYSIS"), default=1, min_val=0, max_val=5)
+        self._max_sam_requests_per_analysis: int = _parse_int(os.environ.get("MAX_SAM_REQUESTS_PER_ANALYSIS"), default=3, min_val=0, max_val=5)
         self._max_reasoning_requests_per_briefing: int = _parse_int(os.environ.get("MAX_REASONING_REQUESTS_PER_BRIEFING"), default=2, min_val=0, max_val=5)
         self._max_reasoning_requests_per_chat: int = _parse_int(os.environ.get("MAX_REASONING_REQUESTS_PER_CHAT"), default=3, min_val=0, max_val=10)
         self._max_tool_iterations_per_chat: int = _parse_int(os.environ.get("MAX_TOOL_ITERATIONS_PER_CHAT"), default=2, min_val=0, max_val=5)
@@ -150,7 +150,7 @@ class Settings:
 
         # Network Timeouts & Retries (Zero automatic retries by default to prevent runaway token costs)
         self._connect_timeout_seconds: float = _parse_float(os.environ.get("CONNECT_TIMEOUT_SECONDS"), default=5.0, min_val=1.0, max_val=30.0)
-        self._read_timeout_seconds: float = _parse_float(os.environ.get("READ_TIMEOUT_SECONDS"), default=25.0, min_val=5.0, max_val=120.0)
+        self._read_timeout_seconds: float = _parse_float(os.environ.get("READ_TIMEOUT_SECONDS"), default=45.0, min_val=5.0, max_val=120.0)
         self._max_retries: int = _parse_int(os.environ.get("MAX_RETRIES"), default=0, min_val=0, max_val=3)
 
     # -------------------------------------------------------------------------

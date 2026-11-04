@@ -26,10 +26,12 @@ interface MissionChatbotProps {
 
 const SUGGESTED_QUESTIONS = [
   "Why did RoverMind select this route instead of going straight?",
-  "How many obstacle cells were detected?",
+  "How many obstacle cells were detected in this frame?",
   "What happens if rocky terrain has a traversal cost of 10?",
-  "Is this route guaranteed safe for a rover?",
-  "Summarize the observations in this image."
+  "Why are sunsets blue on Mars?",
+  "How tall is Olympus Mons compared to Mount Everest?",
+  "How does RoverMind use SAM 3.1 to segment terrain?",
+  "Is this route guaranteed physically safe for a rover?",
 ];
 
 export const MissionChatbot: React.FC<MissionChatbotProps> = ({
@@ -198,12 +200,12 @@ export const MissionChatbot: React.FC<MissionChatbotProps> = ({
               <span>Has read-only access to 6 sandboxed tools: <code>get_mission_summary</code>, <code>get_terrain_distribution</code>, <code>get_region_details</code>, <code>get_route_metrics</code>, <code>compare_routes</code>, <code>get_analysis_diagnostics</code>.</span>
             </div>
             <div className="p-2.5 rounded bg-mars-900 border border-mars-800 space-y-1">
-              <strong className="text-white block uppercase">Safety & Memory Horizons:</strong>
-              <span>Bounded to a maximum of 4 tool-calling iterations per turn and 20 messages per session. Active state is completely isolated per image.</span>
+              <strong className="text-white block uppercase">Safety & Security Guardrails:</strong>
+              <span>Protected by autonomous planetary flight rules: internal credentials, API keys, and system secrets are strictly safeguarded. Unrelated topics are politely deflected.</span>
             </div>
             <div className="p-2.5 rounded bg-mars-900 border border-mars-800 space-y-1">
-              <strong className="text-white block uppercase">Scientific Boundary:</strong>
-              <span>The assistant cannot establish physical slope, wheel slip, or 3D elevation from single monocular frames. Decision support only.</span>
+              <strong className="text-white block uppercase">Scientific Domain:</strong>
+              <span>Answers RoverMind telemetry, A* routing, SAM 3.1 perception, and Mars / space science (Jezero geology, sols, Olympus Mons, rovers, and planetary dynamics).</span>
             </div>
           </div>
         </div>
@@ -338,7 +340,7 @@ export const MissionChatbot: React.FC<MissionChatbotProps> = ({
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about terrain hazards, route justifications, or alternative costs..."
+                placeholder="Ask about this route, obstacle counts, rover specs, or Mars science..."
                 disabled={isLoading}
                 className="flex-1 bg-mars-950 border border-mars-800 rounded px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-mars-rust transition-colors"
               />

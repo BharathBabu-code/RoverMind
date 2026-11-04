@@ -94,27 +94,27 @@ export const MissionIntelligencePanel: React.FC<MissionIntelligencePanelProps> =
               A // Terrain Perception & Composition
             </span>
             <span className="text-[10px] text-slate-400">
-              Dominant: <strong className="text-white uppercase">{observation_overview.dominant_terrain || 'N/A'}</strong>
+              Dominant: <strong className="text-white uppercase">{String(observation_overview.dominant_terrain || 'N/A')}</strong>
             </span>
           </div>
 
-          {observation_overview.terrain_breakdown && (
+          {observation_overview.terrain_breakdown && typeof observation_overview.terrain_breakdown === 'object' && (
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               {Object.entries(observation_overview.terrain_breakdown).map(([label, desc]) => (
                 <div key={label} className="p-2 rounded bg-mars-900 border border-mars-800">
                   <span className="text-slate-400 block uppercase font-semibold text-[10px]">{label}</span>
-                  <span className="text-slate-200">{desc}</span>
+                  <span className="text-slate-200">{typeof desc === 'object' ? JSON.stringify(desc) : String(desc)}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {observation_overview.spatial_highlights && observation_overview.spatial_highlights.length > 0 && (
+          {Array.isArray(observation_overview.spatial_highlights) && observation_overview.spatial_highlights.length > 0 && (
             <div className="space-y-1 pt-1">
               <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Spatial Observations:</span>
               <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px]">
                 {observation_overview.spatial_highlights.map((h, i) => (
-                  <li key={i}>{h}</li>
+                  <li key={i}>{typeof h === 'object' ? JSON.stringify(h) : String(h)}</li>
                 ))}
               </ul>
             </div>
@@ -133,28 +133,28 @@ export const MissionIntelligencePanel: React.FC<MissionIntelligencePanelProps> =
                 ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'
                 : 'bg-red-950 text-red-400 border border-red-500/30'
             }`}>
-              {navigation_assessment.path_feasibility || 'UNKNOWN'}
+              {String(navigation_assessment.path_feasibility || 'UNKNOWN')}
             </span>
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="p-2 rounded bg-mars-900 border border-mars-800">
               <span className="text-[10px] text-slate-400 block uppercase">Waypoints</span>
-              <span className="font-display font-bold text-white text-base">{navigation_assessment.waypoints_count ?? 0}</span>
+              <span className="font-display font-bold text-white text-base">{Number(navigation_assessment.waypoints_count ?? 0)}</span>
             </div>
             <div className="p-2 rounded bg-mars-900 border border-mars-800">
               <span className="text-[10px] text-slate-400 block uppercase">Weighted Cost</span>
-              <span className="font-display font-bold text-emerald-400 text-base">{navigation_assessment.total_weighted_cost?.toFixed(1) ?? '0.0'}</span>
+              <span className="font-display font-bold text-emerald-400 text-base">{Number(navigation_assessment.total_weighted_cost ?? 0).toFixed(1)}</span>
             </div>
             <div className="p-2 rounded bg-mars-900 border border-mars-800">
               <span className="text-[10px] text-slate-400 block uppercase">Geometric Dist</span>
-              <span className="font-display font-bold text-mars-sky text-base">{navigation_assessment.geometric_length_units?.toFixed(1) ?? '0.0'}</span>
+              <span className="font-display font-bold text-mars-sky text-base">{Number(navigation_assessment.geometric_length_units ?? 0).toFixed(1)}</span>
             </div>
           </div>
 
           <div className="text-[11px] text-slate-300 space-y-1">
-            <p><strong className="text-slate-400">Obstacle Avoidance:</strong> {navigation_assessment.obstacle_avoidance}</p>
-            <p><strong className="text-slate-400">Optimization:</strong> {navigation_assessment.influencing_factors}</p>
+            <p><strong className="text-slate-400">Obstacle Avoidance:</strong> {String(navigation_assessment.obstacle_avoidance || 'Avoids detected obstacles')}</p>
+            <p><strong className="text-slate-400">Optimization:</strong> {String(navigation_assessment.influencing_factors || 'Weighted cost optimization')}</p>
           </div>
         </div>
 
@@ -167,13 +167,13 @@ export const MissionIntelligencePanel: React.FC<MissionIntelligencePanelProps> =
             </span>
           </div>
 
-          {risk_and_uncertainty.elevated_cost_regions && (
+          {Array.isArray(risk_and_uncertainty.elevated_cost_regions) && risk_and_uncertainty.elevated_cost_regions.length > 0 && (
             <div>
               <span className="text-[10px] text-slate-500 uppercase tracking-widest block mb-1">Elevated Impedance Zones:</span>
               <div className="flex flex-wrap gap-1.5">
                 {risk_and_uncertainty.elevated_cost_regions.map((r, i) => (
                   <span key={i} className="px-2 py-0.5 rounded bg-mars-900 border border-mars-800 text-[11px] text-amber-300">
-                    {r}
+                    {typeof r === 'object' ? JSON.stringify(r) : String(r)}
                   </span>
                 ))}
               </div>
@@ -182,7 +182,7 @@ export const MissionIntelligencePanel: React.FC<MissionIntelligencePanelProps> =
 
           {risk_and_uncertainty.unknown_unmapped_regions && (
             <p className="text-[11px] text-slate-300">
-              <strong className="text-slate-400">Unmapped Cells:</strong> {risk_and_uncertainty.unknown_unmapped_regions}
+              <strong className="text-slate-400">Unmapped Cells:</strong> {String(risk_and_uncertainty.unknown_unmapped_regions)}
             </p>
           )}
 
@@ -193,8 +193,8 @@ export const MissionIntelligencePanel: React.FC<MissionIntelligencePanelProps> =
               Monocular Sensor Boundary Notice:
             </span>
             <ul className="list-disc list-inside space-y-0.5">
-              {risk_and_uncertainty.monocular_limitations?.map((lim, idx) => (
-                <li key={idx}>{lim}</li>
+              {(Array.isArray(risk_and_uncertainty.monocular_limitations) ? risk_and_uncertainty.monocular_limitations : []).map((lim, idx) => (
+                <li key={idx}>{typeof lim === 'object' ? JSON.stringify(lim) : String(lim)}</li>
               ))}
             </ul>
           </div>
@@ -210,10 +210,10 @@ export const MissionIntelligencePanel: React.FC<MissionIntelligencePanelProps> =
           </div>
 
           <div className="space-y-2">
-            {mission_takeaways.map((takeaway, i) => (
+            {(Array.isArray(mission_takeaways) ? mission_takeaways : []).map((takeaway, i) => (
               <div key={i} className="flex items-start gap-2 p-2 rounded bg-mars-900 border border-mars-800 text-[11px] text-slate-200">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>{takeaway}</span>
+                <span>{typeof takeaway === 'object' ? JSON.stringify(takeaway) : String(takeaway)}</span>
               </div>
             ))}
           </div>

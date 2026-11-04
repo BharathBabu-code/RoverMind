@@ -11,6 +11,7 @@ import { PlanetaryNarrative } from './components/PlanetaryNarrative';
 import { PathCalculationExplainer } from './components/PathCalculationExplainer';
 import { MissionIntelligencePanel } from './components/MissionIntelligencePanel';
 import { MissionChatbot } from './components/MissionChatbot';
+import { MarsFactTicker } from './components/MarsFactTicker';
 import {
   HealthResponse,
   ConfigStatusResponse,
@@ -180,6 +181,16 @@ export const App: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-mars-950 text-slate-100 relative">
       {/* Interactive Spacecraft Cursor Layer */}
       <SpacecraftCursor />
+
+      {/* Rotating Fact-Checked Mars & Space Telemetry Ticker during Loading */}
+      <MarsFactTicker
+        isLoading={isLoading || isBriefingLoading}
+        statusLabel={
+          isLoading
+            ? 'Executing SAM 3.1 & A* Pipeline...'
+            : 'Generating Mission Intelligence Briefing...'
+        }
+      />
 
       {/* Top Aerospace Mission Control Navigation Bar */}
       <Navbar

@@ -41,6 +41,21 @@ export interface ImageUploadResponse {
   message: string;
 }
 
+export interface GalleryItem {
+  id: string;
+  title: string;
+  rover: string;
+  camera: string;
+  sol: number;
+  site: string;
+  description: string;
+  filename: string;
+  width: number;
+  height: number;
+  file_size_bytes: number;
+  preview_url: string;
+}
+
 export interface MaskRecordDto {
   object_id: string;
   concept: string;

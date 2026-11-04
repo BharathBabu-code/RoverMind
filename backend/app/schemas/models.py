@@ -45,6 +45,21 @@ class ImageUploadResponse(BaseModel):
     message: str
 
 
+class GalleryItem(BaseModel):
+    id: str
+    title: str
+    rover: str
+    camera: str
+    sol: int
+    site: str
+    description: str
+    filename: str
+    width: int
+    height: int
+    file_size_bytes: int
+    preview_url: str
+
+
 class MaskRecordDto(BaseModel):
     object_id: str
     concept: str

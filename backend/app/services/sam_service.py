@@ -89,22 +89,34 @@ def run_live_sam_segmentation(
 
         valid_concepts = [c.strip() for c in concepts if c.strip()]
         if not valid_concepts:
-            valid_concepts = ["rock"]
+            valid_concepts = ["rock", "sand", "obstacle"]
 
-        # Safety-First Prioritization: Sort concepts by hazard priority so high-risk concepts (obstacles, rocks)
-        # are evaluated first when the request budget is bounded.
-        valid_concepts.sort(key=lambda c: get_concept_priority(c), reverse=True)
+        # Prioritize physical optical entities ('rock', 'sand') that SAM 3.1 is trained on,
+        # so physical features are segmented even under tight request budgets.
+        preferred_order = ["rock", "sand", "boulder", "obstacle", "loose"]
+        valid_concepts.sort(key=lambda c: preferred_order.index(c.lower()) if c.lower() in preferred_order else 99)
+
+        # Map abstract operational concepts to physical visual tokens recognized by SAM 3.1
+        SAM_VISUAL_PROMPT_MAP = {
+            "obstacle": "boulder",
+            "rocky": "rock",
+            "loose": "sand",
+            "clear": "bedrock ground",
+        }
 
         for concept in valid_concepts:
-            prompt = concept.strip()
-            if not prompt:
+            raw_concept = concept.strip()
+            if not raw_concept:
                 continue
+
+            prompt = raw_concept
+            visual_prompt = SAM_VISUAL_PROMPT_MAP.get(raw_concept.lower(), raw_concept)
 
             # Check and consume request budget BEFORE attempting external API call
             if not active_budget.record_request():
                 exhaust_msg = (
                     f"Budget enforcement: Request budget exhausted ({active_budget.limit} limit reached). "
-                    f"Skipping concept '{prompt}'."
+                    f"Skipping concept '{raw_concept}'."
                 )
                 api_telemetry.record_sam_budget_exhausted(exhaust_msg)
                 diagnostics.append(exhaust_msg)
@@ -119,7 +131,7 @@ def run_live_sam_segmentation(
                             "type": "message",
                             "role": "user",
                             "content": [
-                                {"type": "input_text", "text": prompt},
+                                {"type": "input_text", "text": visual_prompt},
                                 {"type": "input_image", "image_url": image_data_url},
                             ],
                         },
@@ -128,21 +140,54 @@ def run_live_sam_segmentation(
             except Exception as e:
                 sanitized_err = sanitize_error(e)
                 api_telemetry.record_sam_failure(sanitized_err, was_started=True)
-                diagnostics.append(f"API request failed for concept '{prompt}': {sanitized_err}")
+                diagnostics.append(f"API request failed for concept '{raw_concept}': {sanitized_err}")
                 continue
 
-            # Extract response text safely
+            # Extract response text safely across all SDK output formats
             response_text = ""
-            if hasattr(response, "output_text") and response.output_text is not None:
-                response_text = response.output_text
+            if hasattr(response, "output_text") and response.output_text:
+                response_text = str(response.output_text)
+            elif hasattr(response, "choices") and response.choices:
+                try:
+                    msg = response.choices[0].message
+                    response_text = str(getattr(msg, "content", "") or "")
+                except Exception:
+                    pass
             elif hasattr(response, "output") and response.output:
                 try:
-                    response_text = response.output[0].content[0].text
-                except (IndexError, AttributeError):
+                    for item in response.output:
+                        if hasattr(item, "content"):
+                            for c in item.content:
+                                if hasattr(c, "text") and c.text:
+                                    response_text = str(c.text)
+                                    break
+                                if isinstance(c, dict) and "text" in c:
+                                    response_text = str(c["text"])
+                                    break
+                        elif hasattr(item, "text") and item.text:
+                            response_text = str(item.text)
+                            break
+                        elif isinstance(item, dict):
+                            if "text" in item and item["text"]:
+                                response_text = str(item["text"])
+                                break
+                            if "content" in item and isinstance(item["content"], list):
+                                for c in item["content"]:
+                                    if isinstance(c, dict) and "text" in c:
+                                        response_text = str(c["text"])
+                                        break
+                        if response_text:
+                            break
+                except Exception:
                     pass
+            elif hasattr(response, "text") and isinstance(response.text, str):
+                response_text = response.text
+            elif hasattr(response, "content") and isinstance(response.content, str):
+                response_text = response.content
 
             if not response_text:
-                err_msg = f"No response text received for concept '{prompt}'"
+                attrs = [a for a in dir(response) if not a.startswith('_')]
+                err_msg = f"No response text received for concept '{raw_concept}' (prompted as '{visual_prompt}'). Response type: {type(response).__name__}, fields: {attrs}"
                 api_telemetry.record_sam_failure(err_msg, was_started=True)
                 diagnostics.append(err_msg)
                 continue

@@ -2,6 +2,7 @@ import {
   HealthResponse,
   ConfigStatusResponse,
   ImageUploadResponse,
+  GalleryItem,
   FullAnalysisResponse,
   PathPlanResponse,
   MissionBriefing,
@@ -49,6 +50,26 @@ export async function loadSampleRoverImage(): Promise<ImageUploadResponse> {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(errorData.detail || 'Failed to load sample image.');
+  }
+  return res.json();
+}
+
+export async function fetchGalleryItems(): Promise<GalleryItem[]> {
+  const res = await fetch(`${API_BASE}/images/gallery`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errorData.detail || 'Failed to load gallery images.');
+  }
+  return res.json();
+}
+
+export async function loadGalleryImage(galleryId: string): Promise<ImageUploadResponse> {
+  const res = await fetch(`${API_BASE}/images/gallery/${galleryId}/load`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errorData.detail || `Failed to load gallery image '${galleryId}'.`);
   }
   return res.json();
 }

@@ -8,7 +8,8 @@ from typing import Dict, Optional, Tuple, Any
 from pathlib import Path
 from PIL import Image, UnidentifiedImageError
 
-from backend.app.schemas.models import ImageMetadata
+from backend.app.schemas.models import ImageMetadata, GalleryItem
+from backend.app.core.config import ROOT_DIR
 
 # Set Pillow maximum pixel ceiling to 25 Megapixels to prevent decompression bombs (DoS)
 MAX_IMAGE_PIXELS = 25_000_000
@@ -148,3 +149,114 @@ def clear_image_store() -> None:
     """Clears in-memory storage."""
     with _STORE_LOCK:
         _IMAGE_STORE.clear()
+
+
+# =========================================================================
+# PRE-DOWNLOADED MARS ROVER IMAGE GALLERY
+# =========================================================================
+
+GALLERY_DIR = ROOT_DIR / "backend" / "app" / "data" / "gallery"
+
+GALLERY_CATALOG: Dict[str, Dict[str, Any]] = {
+    "jezero_vista": {
+        "id": "jezero_vista",
+        "title": "Jezero Crater Exploration Vista",
+        "rover": "Perseverance (Mars 2020)",
+        "camera": "Navcam (Left Navigation Camera)",
+        "sol": 142,
+        "site": "Jezero Crater Delta",
+        "description": "Full-field monocular frame showing fractured basalt bedrock, scattered boulders, and fine dust mantle.",
+        "filename": "jezero_vista.png",
+    },
+    "boulder_field": {
+        "id": "boulder_field",
+        "title": "Kodiak Mesa Boulder Cluster",
+        "rover": "Perseverance (Mars 2020)",
+        "camera": "Navcam (Hazard Avoidance Subframe)",
+        "sol": 184,
+        "site": "Kodiak Promontory",
+        "description": "High-hazard terrain segment with prominent impassable rock obstacles, testing barrier-circumvention path planning.",
+        "filename": "boulder_field.png",
+    },
+    "sand_drift": {
+        "id": "sand_drift",
+        "title": "Neretva Vallis Aeolian Sand Dunes",
+        "rover": "Perseverance (Mars 2020)",
+        "camera": "Hazcam (Forward Hazard Avoidance)",
+        "sol": 215,
+        "site": "Neretva Delta Outwash",
+        "description": "Loose sandy ripple field exhibiting high wheel-slip impedance and low shear strength, requiring bypass routes.",
+        "filename": "sand_drift.png",
+    },
+    "bedrock_corridor": {
+        "id": "bedrock_corridor",
+        "title": "Delta Front Fractured Bedrock Pass",
+        "rover": "Perseverance (Mars 2020)",
+        "camera": "Navcam (Panoramic Mosaic Subframe)",
+        "sol": 298,
+        "site": "Western Delta Scarp",
+        "description": "Flat, low-impedance traversal corridor across sedimentary rock pavement with minimal boulder density.",
+        "filename": "bedrock_corridor.png",
+    },
+}
+
+
+def get_gallery_items() -> list[GalleryItem]:
+    """Returns metadata for all available pre-downloaded Mars rover images."""
+    items: list[GalleryItem] = []
+    for gid, entry in GALLERY_CATALOG.items():
+        file_path = GALLERY_DIR / entry["filename"]
+        if not file_path.exists():
+            continue
+        try:
+            with Image.open(file_path) as img:
+                w, h = img.size
+            size_bytes = file_path.stat().st_size
+            items.append(
+                GalleryItem(
+                    id=gid,
+                    title=entry["title"],
+                    rover=entry["rover"],
+                    camera=entry["camera"],
+                    sol=entry["sol"],
+                    site=entry["site"],
+                    description=entry["description"],
+                    filename=entry["filename"],
+                    width=w,
+                    height=h,
+                    file_size_bytes=size_bytes,
+                    preview_url=f"/api/images/gallery/{gid}/raw"
+                )
+            )
+        except Exception:
+            continue
+    return items
+
+
+def get_gallery_raw_bytes(gallery_id: str) -> Optional[Tuple[bytes, str]]:
+    """Retrieves raw image bytes and MIME type for a gallery item."""
+    entry = GALLERY_CATALOG.get(gallery_id)
+    if not entry:
+        return None
+    file_path = GALLERY_DIR / entry["filename"]
+    if not file_path.exists():
+        return None
+    try:
+        data = file_path.read_bytes()
+        mime = "image/png" if entry["filename"].endswith(".png") else "image/jpeg"
+        return data, mime
+    except Exception:
+        return None
+
+
+def load_gallery_image_to_store(gallery_id: str) -> ImageMetadata:
+    """Loads a pre-downloaded Mars gallery image directly into the active session store."""
+    entry = GALLERY_CATALOG.get(gallery_id)
+    if not entry:
+        raise KeyError(f"Gallery image '{gallery_id}' not found in catalog.")
+    file_path = GALLERY_DIR / entry["filename"]
+    if not file_path.exists():
+        raise FileNotFoundError(f"Gallery image file '{entry['filename']}' not found on disk.")
+    
+    file_bytes = file_path.read_bytes()
+    return validate_and_store_image(file_bytes, entry["filename"])
