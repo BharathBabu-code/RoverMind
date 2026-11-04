@@ -25,7 +25,6 @@ def test_process_local_image_mismatched_extension(tmp_path: Path) -> None:
     img.save(img_path, format="PNG")
     
     result = process_local_image(str(img_path))
-    # It should correctly identify the internal format as PNG
     assert result["mime_type"] == "image/png"
 
 def test_process_local_image_unsupported_format(tmp_path: Path) -> None:
@@ -44,8 +43,15 @@ def test_process_local_image_invalid_file(tmp_path: Path) -> None:
         process_local_image(str(file_path))
 
 def test_count_foreground_pixels_success() -> None:
-    raster = b"\x00\x01\x00\xff"
+    # 4 bytes (2x2 mask): 2 background (0x00), 2 foreground (0x01)
+    raster = b"\x00\x01\x00\x01"
     assert count_foreground_pixels(raster, expected_length=4) == 2
+
+def test_count_foreground_pixels_non_binary() -> None:
+    # Invalid raster containing 0xFF instead of 0x01
+    raster = b"\x00\x01\x00\xff"
+    with pytest.raises(ValueError, match="contains non-binary values"):
+        count_foreground_pixels(raster, expected_length=4)
 
 def test_count_foreground_pixels_dimension_mismatch() -> None:
     raster = b"\x00\x01"
@@ -60,11 +66,11 @@ def test_extract_response_text_output_text() -> None:
 def test_extract_response_text_empty_string() -> None:
     class MockResponse:
         output_text = "   "
-    with pytest.raises(ValueError, match="empty or not a valid string"):
+    with pytest.raises(ValueError, match="non-empty response string"):
         extract_response_text(MockResponse())
 
 def test_extract_response_text_invalid_type() -> None:
     class MockResponse:
         output_text = 12345
-    with pytest.raises(ValueError, match="empty or not a valid string"):
+    with pytest.raises(ValueError, match="non-empty response string"):
         extract_response_text(MockResponse())
