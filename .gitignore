@@ -152,6 +152,7 @@ activemq-data/
 # Environments and Secrets
 .env
 .env.*
+!.env.example
 .envrc
 *.env
 api_usage_ledger.json
