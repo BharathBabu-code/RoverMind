@@ -12,12 +12,12 @@ RoverMind is an AI-assisted planetary exploration decision-support and visualiza
 - **Normalized Terrain Contract**: Converts semantic visual concepts to canonical terrain classes (`clear`, `rocky`, `loose`, `obstacle`, `unknown`).
 - **Configurable Traversal Costmaps**: Translates terrain classes into numeric impedance grids with impassable obstacles.
 - **Authoritative Custom A* Pathfinding**: Supports 4-way cardinal and 8-way diagonal movement, Octile/Manhattan heuristics, and corner-cutting prevention.
-- **Meta Reasoning Model & Structured Mission Intelligence**: Integrates `llama-3.3-70b-instruct` to synthesize 4-part operational briefings (Observation, Navigation Assessment, Risk & Uncertainty, Actionable Takeaways) with zero hallucinated geometry.
-- **Contextual Mission Chatbot & Controlled Tool Interface**: Conversational assistant with access to 6 sandboxed simulation tools (`get_mission_summary`, `get_terrain_distribution`, `get_region_details`, `get_route_metrics`, `compare_routes`, `get_analysis_diagnostics`) bounded to 4 tool-calling iterations and 20-message session memory.
+- **Meta Reasoning Model & Structured Mission Intelligence**: Multi-model reasoning pipeline featuring primary `meta/muse-spark` with automatic graceful fallback to `meta/llama-3.3-70b-instruct`, and deterministic offline rule engine to synthesize 4-part operational briefings (Observation, Navigation Assessment, Risk & Uncertainty, Actionable Takeaways) with zero hallucinated geometry.
+- **Contextual Mission Chatbot & Controlled Tool Interface**: Conversational assistant with access to 6 sandboxed simulation tools (`get_mission_summary`, `get_terrain_distribution`, `get_region_details`, `get_route_metrics`, `compare_routes`, `get_analysis_diagnostics`) bounded to 4 tool-calling iterations and 25-message session memory.
 - **Mission-Control React Frontend**: Dark Mars-themed UI with layer toggling, opacity slider, cell inspection, interactive Start/Goal placement, live Mission Briefing HUD, and interactive Mission Chatbot drawer.
-- **Graceful Offline Mode**: Automatically operates with labelled synthetic fixtures and deterministic rule engines when API keys are not configured.
-- **Comprehensive Test Suite**: 124 backend automated tests passing with 100% success rate, alongside strict frontend TypeScript compilation (128 total checks).
-- **Hardened Security Architecture**: 25MP decompression bomb ceiling, dual-bounded in-memory session cache (25 frames and 100MB aggregate RAM ceiling), configurable production CORS origins, defensive HTTP security headers, and sanitized error disclosures.
+- **Graceful Offline Mode**: Automatically operates with labelled synthetic fixtures and deterministic rule engines when API keys are not configured or external access is disabled.
+- **Comprehensive Test Suite**: 203 backend automated tests passing with 100% success rate under a hermetic test firewall, alongside strict frontend TypeScript compilation (`tsc`) and Vite production build.
+- **Hardened Security & API Cost Governance**: Global API kill switch (`EXTERNAL_API_ENABLED=false`), dry-run validation mode, atomic operation budget limits (`RequestBudget`), concurrency semaphores, 25MP decompression bomb ceiling, dual-bounded in-memory session cache (25 frames and 100MB aggregate RAM ceiling), configurable production CORS origins, defensive HTTP security headers, and comprehensive regex error sanitization for credentials and tokens.
 
 ---
 
@@ -44,7 +44,7 @@ Custom A* Path Planning (find_path)
            ↓
 Structured Mission Context (MissionContextDto, LRU Store)
            ↓
-Meta Reasoning Model (llama-3.3-70b-instruct / Deterministic Rule Engine)
+Meta Reasoning Model (Primary: muse-spark / Fallback: llama-3.3 / Deterministic Rule Engine)
    ├── Observation Summarization (4-part structured briefing)
    ├── Terrain & Route Analysis Justification
    ├── Physical Risk & Sensor Uncertainty Interpretation
@@ -89,7 +89,7 @@ Comprehensive technical documentation is provided in the [`docs/`](./docs) direc
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-repo/RoverMind.git
+git clone https://github.com/BharathBabu-code/RoverMind.git
 cd RoverMind
 ```
 
@@ -132,23 +132,55 @@ cd ..
 
 ## Environment & API Key Safety
 
-The root `.env.example` file contains:
+The project ships with `.env.example` defining safe pre-live defaults:
+
 ```env
+# Global Kill Switch & Pre-Live Safety Mode
+EXTERNAL_API_ENABLED=false
+EXTERNAL_API_DRY_RUN=true
+
 # Meta SAM 3.1 Visual Segmentation
-META_API_KEY=
+META_API_KEY=your_meta_sam_api_key_here
 
-# Meta Reasoning Model (Llama 3.3 70B Instruct / Muse Spark candidate)
-META_REASONING_API_KEY=
-META_REASONING_MODEL=llama-3.3-70b-instruct
+# Meta Reasoning Model (Primary: muse-spark, Fallback: llama-3.3)
+META_REASONING_API_KEY=your_meta_reasoning_api_key_here
+REASONING_PROVIDER=muse-spark
+MUSE_SPARK_MODEL=muse-spark-1.3
+LLAMA_MODEL=llama-3.3-70b-instruct
 META_REASONING_BASE_URL=https://api.meta.ai/v1
+
+# Security & Governance Limits
+MAX_CONCURRENT_SAM_REQUESTS=2
+MAX_CONCURRENT_REASONING_REQUESTS=2
+MAX_REASONING_REQUESTS_PER_BRIEFING=2
+MAX_REASONING_REQUESTS_PER_CHAT=5
+MAX_TOOL_ITERATIONS_PER_CHAT=4
 ```
 
-To run with live Meta SAM 3.1 and Meta Reasoning models, copy `.env.example` to `.env` and set your API keys:
-```powershell
-Copy-Item .env.example .env
-```
+### Running Offline (Default — No Keys Required)
+If you **do not create a `.env` file**, RoverMind runs in **100% deterministic offline mode**:
+- Segmentation generates synthetic labelled terrain fixtures.
+- Mission briefings and chatbot replies use the local deterministic rule engine.
+- No billable external requests or network connections are ever made.
 
-> **Security Note**: Never commit `.env` to version control. If `META_API_KEY` or `META_REASONING_API_KEY` are empty, RoverMind gracefully operates in **offline demonstration mode** using labelled synthetic fixtures and the deterministic reasoning engine.
+### Running Live (When Ready for Real API Inference)
+When you are ready to make real external API calls:
+1. Copy `.env.example` to create a `.env` file in the project root:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+2. Open `.env` and fill in your actual API keys:
+   ```env
+   META_API_KEY=your_actual_sam_api_key
+   META_REASONING_API_KEY=your_actual_reasoning_api_key
+   ```
+3. Enable external API calls and disable dry-run mode:
+   ```env
+   EXTERNAL_API_ENABLED=true
+   EXTERNAL_API_DRY_RUN=false
+   ```
+
+> **Security Note**: Never commit your `.env` file to Git. The `.gitignore` file is pre-configured to ignore `.env` so your secrets remain protected on your machine.
 
 ---
 
