@@ -471,18 +471,42 @@ def truncate_tool_output(result: Any, max_bytes: int) -> str:
 # =========================================================================
 
 def _call_llm_for_briefing(client: Any, model: str, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
-    """Helper executing LLM completion for briefing with JSON response format."""
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        response_format={"type": "json_object"},
-        temperature=0.2
-    )
-    raw_json_str = response.choices[0].message.content or "{}"
-    return json.loads(raw_json_str)
+    """Helper executing LLM completion for briefing with JSON response format, with robust plain-completion fallback."""
+    raw_text = "{}"
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2
+        )
+        raw_text = response.choices[0].message.content or "{}"
+    except Exception as e_resp:
+        err_msg = str(e_resp).lower()
+        if any(k in err_msg for k in ["response_format", "json_object", "unsupported", "bad request", "400"]):
+            # Fallback specifically for models/endpoints that reject response_format parameter
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt + "\nYou must respond with pure JSON only matching the schema."},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.2
+            )
+            raw_text = response.choices[0].message.content or "{}"
+        else:
+            raise e_resp
+
+    cleaned = raw_text.strip()
+    if "```json" in cleaned:
+        cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+    elif "```" in cleaned:
+        cleaned = cleaned.split("```")[1].split("```")[0].strip()
+
+    return json.loads(cleaned)
 
 
 def generate_live_mission_briefing(image_id: str, budget: Optional[RequestBudget] = None) -> MissionBriefing:
@@ -526,8 +550,8 @@ def generate_live_mission_briefing(image_id: str, budget: Optional[RequestBudget
     # 5. Initialize Operation Request Budget (strictly enforces limit across primary & fallback)
     active_budget = budget or RequestBudget(settings.max_reasoning_requests_per_briefing, operation_name="briefing")
 
-    # 6. Concurrency Semaphore Guard
-    acquired = api_telemetry.reasoning_semaphore.acquire(timeout=settings.connect_timeout_seconds)
+    # 6. Concurrency Semaphore Guard (allow adequate timeout to prevent false concurrency rejection)
+    acquired = api_telemetry.reasoning_semaphore.acquire(timeout=settings.read_timeout_seconds)
     if not acquired:
         api_telemetry.record_reasoning_concurrency_rejected(pri_model, "Reasoning concurrency limit reached")
         return generate_deterministic_briefing(image_id, provenance="DETERMINISTIC — OFFLINE FALLBACK")
@@ -1117,8 +1141,8 @@ def process_chat_turn(request: ChatRequest) -> ChatResponse:
     # 6. Initialize Operation Request Budget
     budget = RequestBudget(settings.max_reasoning_requests_per_chat, operation_name="chat_turn")
 
-    # 7. Concurrency Semaphore Guard
-    acquired = api_telemetry.reasoning_semaphore.acquire(timeout=settings.connect_timeout_seconds)
+    # 7. Concurrency Semaphore Guard (allow adequate timeout to prevent false concurrency rejection)
+    acquired = api_telemetry.reasoning_semaphore.acquire(timeout=settings.read_timeout_seconds)
     if not acquired:
         api_telemetry.record_reasoning_concurrency_rejected(pri_model, "Reasoning concurrency limit reached")
         reply_text, tool_logs = _deterministic_chat_response(request.image_id, bounded_user_message)

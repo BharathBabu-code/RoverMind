@@ -141,7 +141,7 @@ class Settings:
 
         # Concurrency Caps
         self._max_concurrent_sam_requests: int = _parse_int(os.environ.get("MAX_CONCURRENT_SAM_REQUESTS"), default=1, min_val=1, max_val=4)
-        self._max_concurrent_reasoning_requests: int = _parse_int(os.environ.get("MAX_CONCURRENT_REASONING_REQUESTS"), default=1, min_val=1, max_val=4)
+        self._max_concurrent_reasoning_requests: int = _parse_int(os.environ.get("MAX_CONCURRENT_REASONING_REQUESTS"), default=4, min_val=1, max_val=8)
 
         # Payload & Context Guardrails
         self._max_input_text_length: int = _parse_int(os.environ.get("MAX_INPUT_TEXT_LENGTH"), default=1000, min_val=100, max_val=5000)

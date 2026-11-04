@@ -263,26 +263,26 @@ export const PlanetaryNarrative: React.FC<PlanetaryNarrativeProps> = ({
             {
               id: 'clear',
               name: 'Firm Bedrock',
-              cost: '1.0 Impedance',
+              cost: '1.0x Impedance',
               color: 'text-emerald-400 border-emerald-500/30 bg-emerald-950/20',
               badge: 'bg-emerald-500',
               desc: 'Compact Martian soil and smooth bedrock; nominal wheel traction and minimal sinkage risk.'
             },
             {
-              id: 'sand',
-              name: 'Loose Sand Drift',
-              cost: '3.5 Impedance',
-              color: 'text-mars-amber border-amber-500/30 bg-amber-950/20',
-              badge: 'bg-amber-500',
-              desc: 'Windblown fine regolith and sand dunes; elevated motor current and wheel slippage risk.'
-            },
-            {
               id: 'rock',
               name: 'Rocky Field',
-              cost: '6.0 Impedance',
+              cost: '3.0x Impedance',
               color: 'text-mars-rust border-orange-500/30 bg-orange-950/20',
               badge: 'bg-orange-500',
               desc: 'Scattered basalt boulders and angular stones; mechanical shock and high-centering hazard.'
+            },
+            {
+              id: 'sand',
+              name: 'Loose Sand Drift',
+              cost: '5.0x Impedance',
+              color: 'text-mars-amber border-amber-500/30 bg-amber-950/20',
+              badge: 'bg-amber-500',
+              desc: 'Windblown fine regolith and sand dunes; elevated motor current and wheel slippage risk.'
             },
             {
               id: 'obstacle',

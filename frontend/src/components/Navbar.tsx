@@ -154,7 +154,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   ? 'bg-blue-400 animate-pulse'
                   : config?.reasoning_status === 'last_request_successful'
                   ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
-                  : config?.reasoning_status === 'configured_untested'
+                  : config?.reasoning_status === 'request_in_progress'
+                  ? 'bg-blue-400 animate-pulse'
+                  : config?.is_reasoning_api_configured
                   ? 'bg-amber-400'
                   : 'bg-slate-500'
               }`}
@@ -166,6 +168,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'AI: DRY RUN'
                 : config?.reasoning_status === 'last_request_successful'
                 ? (config?.reasoning_provider === 'muse-spark' ? 'MUSE SPARK: LIVE' : 'LLAMA 3.3: LIVE')
+                : config?.reasoning_status === 'request_in_progress'
+                ? 'AI: INFERRING...'
+                : config?.is_reasoning_api_configured
+                ? (config?.reasoning_provider === 'muse-spark' ? 'MUSE SPARK: READY' : 'LLAMA 3.3: READY')
                 : 'AI: DETERMINISTIC'}
             </span>
           </div>

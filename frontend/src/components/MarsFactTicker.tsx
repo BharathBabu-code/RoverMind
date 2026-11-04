@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, ShieldCheck, Orbit, RefreshCw } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, Orbit, RefreshCw, X } from 'lucide-react';
 
 interface MarsFact {
   id: number;
@@ -135,18 +135,20 @@ export const MarsFactTicker: React.FC<MarsFactTickerProps> = ({
 }) => {
   const [factIndex, setFactIndex] = useState(() => Math.floor(Math.random() * VERIFIED_MARS_FACTS.length));
   const [progress, setProgress] = useState(0);
+  const [isDismissed, setIsDismissed] = useState(false);
 
-  // When isLoading turns true, pick a fresh random fact and start progress cycle
+  // When isLoading turns true, reset dismissal, pick a fresh random fact, and start 10s progress cycle
   useEffect(() => {
     if (!isLoading) {
       setProgress(0);
       return;
     }
 
+    setIsDismissed(false);
     setFactIndex(Math.floor(Math.random() * VERIFIED_MARS_FACTS.length));
     setProgress(0);
 
-    const DURATION_MS = 5500;
+    const DURATION_MS = 10000; // 10 seconds per fact
     const STEP_MS = 100;
     let elapsed = 0;
 
@@ -165,7 +167,7 @@ export const MarsFactTicker: React.FC<MarsFactTickerProps> = ({
     return () => window.clearInterval(interval);
   }, [isLoading]);
 
-  if (!isLoading) return null;
+  if (!isLoading || isDismissed) return null;
 
   const currentFact = VERIFIED_MARS_FACTS[factIndex];
 
@@ -198,6 +200,14 @@ export const MarsFactTicker: React.FC<MarsFactTickerProps> = ({
               <Orbit className="w-3 h-3 text-mars-copper" />
               {currentFact.category}
             </span>
+            <button
+              onClick={() => setIsDismissed(true)}
+              className="p-1 rounded hover:bg-mars-800 text-slate-400 hover:text-white transition-colors"
+              title="Dismiss Mars facts"
+              aria-label="Dismiss Mars facts"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -218,20 +228,28 @@ export const MarsFactTicker: React.FC<MarsFactTickerProps> = ({
           </p>
         </div>
 
-        {/* Footer Verification Citation & Next Fact Control */}
+        {/* Footer Verification Citation & Controls */}
         <div className="mt-3 pt-2 border-t border-mars-850 flex items-center justify-between text-[10px] font-mono text-slate-400">
-          <div className="flex items-center gap-1 text-slate-400 truncate max-w-[280px]">
+          <div className="flex items-center gap-1 text-slate-400 truncate max-w-[240px]">
             <ShieldCheck className="w-3 h-3 text-emerald-400 flex-shrink-0" />
             <span className="truncate">Source: {currentFact.source}</span>
           </div>
 
-          <button
-            onClick={handleNextFact}
-            className="text-mars-copper hover:text-white flex items-center gap-1 px-2 py-1 rounded bg-mars-900 hover:bg-mars-850 border border-mars-800 transition-colors"
-          >
-            <span>Next Fact</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsDismissed(true)}
+              className="text-slate-500 hover:text-slate-300 px-2 py-1 rounded hover:bg-mars-900 border border-transparent hover:border-mars-800 transition-colors"
+            >
+              Dismiss
+            </button>
+            <button
+              onClick={handleNextFact}
+              className="text-mars-copper hover:text-white flex items-center gap-1 px-2 py-1 rounded bg-mars-900 hover:bg-mars-850 border border-mars-800 transition-colors"
+            >
+              <span>Next Fact</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
