@@ -7,10 +7,9 @@ RoverMind is an AI-assisted planetary exploration decision-support and tactical 
 
 ---
 
-## Evaluation Notice for Hackathon Judges
 
-> **Meta API Key Configuration for Evaluation**:  
-> In compliance with competition guidelines, RoverMind evaluates live planetary imagery using your Meta Model API keys. Follow the sequential setup instructions below to configure your credentials:
+> **Meta API Key Configuration**:  
+>RoverMind evaluates live planetary imagery using your Meta Model API keys. Follow the sequential setup instructions below to configure your credentials:
 > 1. Copy `.env.example` to create your local `.env` configuration.
 > 2. Insert your Meta Model API keys (`META_API_KEY` for Meta SAM 3.1 and `META_REASONING_API_KEY` for Meta LLaMA 3.3 / Muse Spark).
 > 3. Activate live inference by toggling `EXTERNAL_API_ENABLED=false` to `true` and `EXTERNAL_API_DRY_RUN=true` to `false`.
@@ -18,11 +17,6 @@ RoverMind is an AI-assisted planetary exploration decision-support and tactical 
 > *(Note: The non-API offline mode is optionally supported as a fallback for local testing without network connectivity, automatically utilizing built-in deterministic adapters and our pre-downloaded Jezero/Gale gallery).*
 
 ---
-
-## Pre-Existing Work vs. Original Work (Hackathon Disclosure)
-
-### Required Opening Line for Submission Video
-> *"In this video, we present RoverMind, an original planetary hazard perception and A\* path planning platform built on top of Meta's SAM 3.1 and LLaMA 3.3 models..."*
 
 ### Architectural Attribution Matrix
 
